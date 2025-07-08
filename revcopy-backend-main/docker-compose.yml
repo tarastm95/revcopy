@@ -1,0 +1,169 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: revcopy_db
+      POSTGRES_USER: revcopy_user
+      POSTGRES_PASSWORD: revcopy_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U revcopy_user -d revcopy_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis for caching and queues
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Amazon Crawler Service (Go microservice)
+  amazon-crawler:
+    build: ../crawlers/amazon
+    ports:
+      - "8080:8080"
+    environment:
+      - GIN_MODE=release
+      - JWT_SECRET=amazon-crawler-jwt-secret-change-in-production
+      - ENVIRONMENT=development
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RevCopy Backend API
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://revcopy_user:revcopy_password@postgres:5432/revcopy_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=development-secret-key-change-in-production
+      - DEBUG=true
+      - ENVIRONMENT=development
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000
+      # Amazon Crawler Integration
+      - AMAZON_CRAWLER_URL=http://amazon-crawler:8080
+      - AMAZON_CRAWLER_TIMEOUT=30
+      - AMAZON_CRAWLER_USERNAME=crawler
+      - AMAZON_CRAWLER_PASSWORD=crawler123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      amazon-crawler:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+    command: python run.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Celery Worker for background tasks
+  worker:
+    build: .
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://revcopy_user:revcopy_password@postgres:5432/revcopy_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - SECRET_KEY=development-secret-key-change-in-production
+      - DEBUG=true
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+    command: celery -A app.tasks worker --loglevel=info
+    healthcheck:
+      test: ["CMD", "celery", "-A", "app.tasks", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Celery Beat for scheduled tasks
+  beat:
+    build: .
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://revcopy_user:revcopy_password@postgres:5432/revcopy_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - SECRET_KEY=development-secret-key-change-in-production
+      - DEBUG=true
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    restart: unless-stopped
+    command: celery -A app.tasks beat --loglevel=info
+
+  # Redis Commander for Redis management (optional)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    profiles:
+      - tools
+
+  # pgAdmin for PostgreSQL management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@revcopy.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_DISABLE_POSTFIX: "true"
+    ports:
+      - "8082:80"  # Changed from 8080 to 8082 to avoid conflict with Amazon crawler
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+  redis_data:
+  pgadmin_data:
+  uploads_data:
+
+networks:
+  default:
+    name: revcopy_network 

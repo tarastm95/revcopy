@@ -1,0 +1,1009 @@
+basePath: /
+definitions:
+  services.AssignProxyRequest:
+    properties:
+      proxy_id:
+        type: string
+      username:
+        type: string
+    required:
+    - proxy_id
+    - username
+    type: object
+  services.BulkScrapeRequest:
+    properties:
+      asins:
+        items:
+          type: string
+        type: array
+      region:
+        type: string
+      urls:
+        items:
+          type: string
+        type: array
+    required:
+    - urls
+    type: object
+  services.CreateProxyRequest:
+    properties:
+      active:
+        type: boolean
+      host:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      port:
+        type: string
+      username:
+        type: string
+    required:
+    - host
+    - name
+    - password
+    - port
+    - username
+    type: object
+  services.CreateUserRequest:
+    properties:
+      active:
+        type: boolean
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - role
+    - username
+    type: object
+  services.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  services.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  services.ScrapeRequest:
+    properties:
+      asin:
+        type: string
+      region:
+        type: string
+      url:
+        type: string
+    required:
+    - url
+    type: object
+  services.SearchRequest:
+    properties:
+      category:
+        type: string
+      max_price:
+        type: integer
+      min_price:
+        type: integer
+      min_rating:
+        type: integer
+      page:
+        type: integer
+      query:
+        type: string
+    required:
+    - query
+    type: object
+  services.UpdateProxyRequest:
+    properties:
+      active:
+        type: boolean
+      host:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      port:
+        type: string
+      username:
+        type: string
+    type: object
+  services.UpdateUserRequest:
+    properties:
+      active:
+        type: boolean
+      password:
+        type: string
+      role:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: High-performance Amazon product scraping microservice with analytics
+    and proxy support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Amazon Crawler API
+  version: "1.0"
+paths:
+  /api/v1/amazon/bulk-scrape:
+    post:
+      consumes:
+      - application/json
+      description: Extract product information from multiple Amazon product URLs (max
+        10)
+      parameters:
+      - description: Amazon product URLs to scrape
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.BulkScrapeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bulk scraping successful
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format or too many URLs
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Bulk scraping failed
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Bulk scrape Amazon products
+      tags:
+      - amazon-scraping
+  /api/v1/amazon/product/{asin}:
+    get:
+      description: Retrieve cached product information by ASIN
+      parameters:
+      - description: Amazon product ASIN
+        in: path
+        name: asin
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product found
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Missing ASIN parameter
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "501":
+          description: Feature not implemented
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get Amazon product by ASIN
+      tags:
+      - amazon-scraping
+  /api/v1/amazon/scrape:
+    post:
+      consumes:
+      - application/json
+      description: Extract product information from a single Amazon product URL
+      parameters:
+      - description: Amazon product URL to scrape
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.ScrapeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Scraping successful
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Scraping failed
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Scrape single Amazon product
+      tags:
+      - amazon-scraping
+  /api/v1/amazon/search:
+    post:
+      consumes:
+      - application/json
+      description: Search for products on Amazon using keywords
+      parameters:
+      - description: Search query and pagination
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.SearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search successful
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Search failed
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Search Amazon products
+      tags:
+      - amazon-scraping
+  /api/v1/analytics/performance:
+    get:
+      description: Retrieve system performance metrics and response times
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Performance metrics
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get performance metrics
+      tags:
+      - analytics
+  /api/v1/analytics/stats:
+    get:
+      description: Retrieve comprehensive analytics statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Analytics statistics
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get analytics statistics
+      tags:
+      - analytics
+  /api/v1/analytics/track:
+    post:
+      consumes:
+      - application/json
+      description: Record a custom analytics event with arbitrary data
+      parameters:
+      - description: Event type and data
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            data:
+              type: object
+            type:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event tracked successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Track custom event
+      tags:
+      - analytics
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with credentials and receive JWT tokens
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/services.LoginResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Authentication failed
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User login
+      tags:
+      - authentication
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh expired JWT token using refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            refresh_token:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token refreshed successfully
+          schema:
+            $ref: '#/definitions/services.LoginResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Token refresh failed
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Refresh JWT token
+      tags:
+      - authentication
+  /api/v1/proxies:
+    get:
+      description: Retrieve a list of all proxy configurations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of proxies
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all proxies
+      tags:
+      - proxy-management
+    post:
+      consumes:
+      - application/json
+      description: Add a new proxy configuration to the system
+      parameters:
+      - description: Proxy configuration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.CreateProxyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Proxy created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create new proxy
+      tags:
+      - proxy-management
+  /api/v1/proxies/{proxy_id}:
+    delete:
+      description: Delete a proxy configuration from the system
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxy_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Proxy deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Cannot delete default proxy
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Proxy not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete proxy
+      tags:
+      - proxy-management
+    get:
+      description: Retrieve proxy configuration by ID
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxy_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Proxy information
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Proxy not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get proxy information
+      tags:
+      - proxy-management
+    put:
+      consumes:
+      - application/json
+      description: Update proxy settings like credentials, host, port, etc.
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxy_id
+        required: true
+        type: string
+      - description: Proxy update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.UpdateProxyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Proxy updated successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Proxy not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update proxy configuration
+      tags:
+      - proxy-management
+  /api/v1/proxy-assignments:
+    get:
+      description: Retrieve all current user-proxy assignments in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user-proxy assignments
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List user-proxy assignments
+      tags:
+      - proxy-management
+    post:
+      consumes:
+      - application/json
+      description: Assign a specific proxy configuration to a user
+      parameters:
+      - description: Proxy assignment data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.AssignProxyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Proxy assigned successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Proxy or user not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Assign proxy to user
+      tags:
+      - proxy-management
+  /api/v1/proxy-assignments/{username}:
+    delete:
+      description: Remove proxy assignment from a user (user will use default proxy)
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Proxy unassigned successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Unassign proxy from user
+      tags:
+      - proxy-management
+  /api/v1/proxy/configure:
+    post:
+      consumes:
+      - application/json
+      description: Update proxy configuration for scraping requests
+      parameters:
+      - description: Proxy configuration
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            host:
+              type: string
+            password:
+              type: string
+            port:
+              type: string
+            username:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Proxy configured successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Configure proxy settings
+      tags:
+      - proxy
+  /api/v1/proxy/status:
+    get:
+      description: Retrieve current proxy connection status and metrics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Proxy status
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get proxy status
+      tags:
+      - proxy
+  /api/v1/proxy/test:
+    post:
+      description: Test the current proxy configuration and connectivity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Proxy test result
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Test proxy connection
+      tags:
+      - proxy
+  /api/v1/users:
+    get:
+      description: Retrieve a list of all users in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all users
+      tags:
+      - user-management
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with specified role and permissions
+      parameters:
+      - description: User creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: User already exists
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create new user
+      tags:
+      - user-management
+  /api/v1/users/{username}:
+    delete:
+      description: Delete a user account from the system
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Cannot delete admin user
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - user-management
+    get:
+      description: Retrieve user information by username
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User information
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user information
+      tags:
+      - user-management
+    put:
+      consumes:
+      - application/json
+      description: Update user password, role, or active status
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
+      - description: User update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request format
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user information
+      tags:
+      - user-management
+  /api/v1/users/{username}/proxy:
+    get:
+      description: Retrieve the proxy configuration assigned to a specific user
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User's proxy information
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User or proxy not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user's assigned proxy
+      tags:
+      - proxy-management
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

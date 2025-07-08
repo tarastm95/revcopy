@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Crawler API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin:0;
+            background: #fafafa;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+        .swagger-ui .topbar {
+            background-color: #2563eb;
+        }
+        .swagger-ui .topbar .download-url-wrapper .select-label {
+            color: #fff;
+        }
+        .swagger-ui .topbar .download-url-wrapper input[type=text] {
+            border: 2px solid #1d4ed8;
+        }
+        .custom-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .custom-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        .custom-header p {
+            margin: 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .api-info {
+            max-width: 1200px;
+            margin: 0 auto 2rem auto;
+            padding: 0 1rem;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .info-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #2563eb;
+        }
+        .info-card h3 {
+            margin: 0 0 1rem 0;
+            color: #1f2937;
+            font-size: 1.25rem;
+        }
+        .info-card p {
+            margin: 0;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        .endpoint-examples {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .endpoint-examples h3 {
+            margin: 0 0 1rem 0;
+            color: #1f2937;
+        }
+        .example-code {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-header">
+        <h1>🚀 Amazon Crawler API</h1>
+        <p>High-performance product scraping microservice with analytics and proxy support</p>
+    </div>
+
+    <div class="api-info">
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>🔐 Authentication</h3>
+                <p>Secure JWT-based authentication with refresh tokens. Default users: admin/admin123, crawler/crawler123, analytics/analytics123</p>
+            </div>
+            <div class="info-card">
+                <h3>🕷️ Amazon Scraping</h3>
+                <p>Extract product information from Amazon URLs. Supports single products, bulk scraping (up to 10 URLs), and product search functionality.</p>
+            </div>
+            <div class="info-card">
+                <h3>📊 Analytics</h3>
+                <p>Comprehensive analytics with performance metrics, request tracking, error monitoring, and usage statistics.</p>
+            </div>
+            <div class="info-card">
+                <h3>🌐 Proxy Support</h3>
+                <p>Configure and manage proxy settings for IP rotation. Pre-configured with anvitop proxy for avoiding rate limits.</p>
+            </div>
+        </div>
+
+        <div class="endpoint-examples">
+            <h3>Quick Start Examples</h3>
+            
+            <h4>1. Login and get JWT token:</h4>
+            <div class="example-code">
+curl -X POST http://localhost:8081/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin123"}'
+            </div>
+
+            <h4>2. Scrape Amazon product:</h4>
+            <div class="example-code">
+curl -X POST http://localhost:8081/api/v1/amazon/scrape \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.amazon.com/dp/B08N5WRWNW"}'
+            </div>
+
+            <h4>3. Get analytics stats:</h4>
+            <div class="example-code">
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:8081/api/v1/analytics/stats
+            </div>
+        </div>
+    </div>
+
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            const ui = SwaggerUIBundle({
+                url: '/swagger/doc.json',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                validatorUrl: null,
+                docExpansion: "none",
+                defaultModelsExpandDepth: 2,
+                defaultModelExpandDepth: 2,
+                displayRequestDuration: true,
+                tryItOutEnabled: true,
+                filter: true,
+                requestInterceptor: function(request) {
+                    // Add custom headers or modify requests here
+                    return request;
+                },
+                responseInterceptor: function(response) {
+                    // Handle responses here
+                    return response;
+                }
+            });
+
+            window.ui = ui;
+        };
+    </script>
+</body>
+</html> 
